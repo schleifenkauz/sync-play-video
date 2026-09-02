@@ -1,0 +1,52 @@
+body {
+  margin: 0;
+  height: 100vh;
+  background: #0b0f14;
+  font-family: sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+/* CONNECT BUTTON */
+.circle-button {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: none;
+  font-size: 18px;
+  font-weight: 600;
+  background: #1f6fff;
+  color: white;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.connect-btn:active {
+  transform: scale(0.95);
+}
+
+.connect-btn:hover {
+  background: #2f7dff;
+}
+
+.hidden {
+  display: none;
+}
+
+#file-upload {
+  display: none;
+}
+
+video {
+  max-width: 100%; 
+  width: 100%;
+}

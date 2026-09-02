@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&display=swap');
+
+.layout {
+    width: min(100% - 32px, 960px);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+.status-text {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 0;
+  text-align: center;
+}
+
+#btn_fullscreen {
+  margin: 8px 0 8px;
+  padding: 10px 18px;
+  border: 1px solid #4b5563;
+  border-radius: 6px;
+  background: #1f2937;
+  color: #ffffff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#media {
+  display: block;
+  width: 100%;
+  max-height: 75vh;
+  object-fit: contain;
+}
+
+#btn_fullscreen:hover {
+  background: #374151;
+}

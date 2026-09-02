@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <title>Admin</title>
+</head>
+
+<body>
+  <div class="container">
+
+    <button id="btn_connect" class="connect-btn circle-button" onclick="connect()">
+      Connect
+    </button>
+
+    <div id="admin_content" class="hidden">
+      <button id="status_div" class="status circle-button" onclick="toggleAudio()">
+        <div id="status_icon" class="icon">⏳</div>
+      </button>
+      <div id="clients-info">
+        <h3>
+          Clients/Ready: <text id="num-clients">0</text>/<text id="num-ready">0</text>          
+        </h3>
+      </div>
+
+    </div>
+    <script src="admin.js"></script>
+</body>
+
+</html>

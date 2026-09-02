@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bach Club</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="client.css" />
+</head>
+
+<body>
+    <div id="stage_preconnect" class="">
+        <button id="btn_connect" class="connect-btn circle-button" onclick="connect()">
+            Connect
+        </button>
+    </div>
+
+    <div id="stage_connecting" class="hidden">
+        <text class="status-text">
+            Connecting...
+        </text>
+    </div>
+
+    <div id="stage_connected" class="hidden">
+        <div class="layout">
+            <text id="wait_msg" class="status-text">
+                Wait for the host to start the video...
+            </text>
+
+            <video id="media" preload="auto" playsinline muted>
+            </video>
+
+            <button id="btn_fullscreen" onclick="window.requestFullscreen()">
+                Enter Fullscreen
+            </button>
+
+        </div>
+    </div>
+
+    <div id="stage_finished" class="hidden">
+        <text class="status-text">
+            End of the performance.<br>
+            Thank you for attending!
+        </text>
+    </div>
+
+    <script src="client.js"></script>
+</body>
+
+</html>
