@@ -175,11 +175,17 @@ var idx = 0;
 
 app.get("/dl-media-file", async (req, res) => {
     const domain = process.env.R2_PUBLIC_DOMAIN;
-    const keys = await get_all_keys("", ".webm");
-    //const keys = await get_all_keys("bach-club", ".mov");
+    //const keys = await get_all_keys("", ".webm");
+    const keys = await get_all_keys("bach-club", ".mov");
     const key = keys[idx++ % keys.length];
+    //const key = getRandomItem(keys);
     console.log("Selected ", key);
     const url = `${domain}/${key}`
+    // res.set({
+    //     "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+    //     "Pragma": "no-cache",
+    //     "Expires": "0"
+    // });
     res.redirect(url);
 });
 

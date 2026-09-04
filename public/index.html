@@ -17,9 +17,13 @@
     </div>
 
     <div id="stage_connecting" class="hidden">
-        <text class="status-text">
+        <text class="status-text" id="connecting_msg">
             Connecting...
         </text>
+        <div id="download_progress" class="download-progress" role="status" aria-live="polite">
+            <progress id="download_progress_bar" max="100" value="0"></progress>
+            <span id="download_progress_text">0%</span>
+        </div>
     </div>
 
     <div id="stage_connected" class="hidden">

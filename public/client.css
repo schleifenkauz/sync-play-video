@@ -37,6 +37,21 @@
   object-fit: contain;
 }
 
+.download-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, 480px);
+  color: #b8c7dc;
+  font-size: 14px;
+}
+
+.download-progress progress {
+  flex: 1;
+  height: 10px;
+  accent-color: #1f6fff;
+}
+
 #btn_fullscreen:hover {
   background: #374151;
 }
