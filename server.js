@@ -32,6 +32,8 @@ function send_play_message() {
 }
 
 wss.on("connection", (ws) => {
+    ws.authenticated = false;
+
     ws.on("close", () => {
         clients = clients.filter(client => client !== ws);
         admins = admins.filter(admin => admin !== ws);
@@ -44,6 +46,16 @@ wss.on("connection", (ws) => {
     ws.on("message", (msg) => {
         const data = JSON.parse(msg);
 
+        if (data.type === "authenticate") {
+            ws.authenticated = typeof process.env.ADMIN_PASSWORD === "string" &&
+                data.password === process.env.ADMIN_PASSWORD;
+            ws.send(JSON.stringify({
+                type: "authentication",
+                authenticated: ws.authenticated
+            }));
+            return;
+        }
+
         // Clock sync
         if (data.type === "ping") {
 
@@ -55,6 +67,10 @@ wss.on("connection", (ws) => {
         }
 
         if (data.type === "toggle") {
+            if (!ws.authenticated) {
+                return;
+            }
+
             if (!playing) {
                 playback_start_time = Date.now() + 2000;
                 send_play_message();
@@ -71,6 +87,10 @@ wss.on("connection", (ws) => {
         }
 
         if (data.type === "register-admin") {
+            if (!ws.authenticated) {
+                return;
+            }
+
             console.log("Registered admin");
             admins.push(ws);
             ws.send(JSON.stringify({ type: "num_clients", num_clients: clients.length }));
@@ -115,26 +135,26 @@ const r2 = new S3Client({
     }
 });
 
-app.post("/upload", upload.single("file"), async (req, res) => {
+// app.post("/upload", upload.single("file"), async (req, res) => {
 
-    const file = req.file;
+//     const file = req.file;
 
-    if (!file) return res.status(400).json({ message: 'no file' });
+//     if (!file) return res.status(400).json({ message: 'no file' });
 
-    await r2.send(
-        new PutObjectCommand({
-            Bucket: "sync-play",
-            Key: file.originalname,
-            Body: file.buffer,
-            ContentType: file.mimetype
-        })
-    );
+//     await r2.send(
+//         new PutObjectCommand({
+//             Bucket: "sync-play",
+//             Key: file.originalname,
+//             Body: file.buffer,
+//             ContentType: file.mimetype
+//         })
+//     );
 
-    res.json({
-        message: "uploaded",
-        file: file.originalname
-    });
-});
+//     res.json({
+//         message: "uploaded",
+//         file: file.originalname
+//     });
+// });
 
 async function get_all_keys(prefix = "", postfix = "") {
     const result_list = await r2.send(
@@ -155,8 +175,9 @@ var idx = 0;
 
 app.get("/dl-media-file", async (req, res) => {
     const domain = process.env.R2_PUBLIC_DOMAIN;
-    const keys = await get_all_keys("bach-club", ".mov");
-    const key = keys[idx % keys.length];
+    const keys = await get_all_keys("", ".webm");
+    //const keys = await get_all_keys("bach-club", ".mov");
+    const key = keys[idx++ % keys.length];
     console.log("Selected ", key);
     const url = `${domain}/${key}`
     res.redirect(url);

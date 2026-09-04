@@ -6,19 +6,33 @@ const toggle = document.getElementById("status_icon")
 const file_input = document.getElementById("file_picker")
 
 async function connect() {
+    const password = window.prompt("Admin password:");
+    if (password === null) {
+        return;
+    }
+
     const protocol = location.protocol === "https:" ? "wss:" : "ws:";
     ws = new WebSocket(`${protocol}//${location.host}`);
 
     ws.onopen = () => {
         console.log("Connected!")
-        btn_connect.style.display = "none"
-        content.classList.remove("hidden")
         toggle.innerHTML = "▶"
-        ws.send(JSON.stringify({ type: "register-admin" }));
+        ws.send(JSON.stringify({ type: "authenticate", password }));
     }
 
     ws.onmessage = (msg) => {
         const data = JSON.parse(msg.data)
+        if (data.type === "authentication") {
+            if (!data.authenticated) {
+                alert("Authentication failed");
+                ws.close();
+                return;
+            }
+
+            btn_connect.style.display = "none"
+            content.classList.remove("hidden")
+            ws.send(JSON.stringify({ type: "register-admin" }));
+        }
         if (data.type === "start") {
             console.log("Start")
             toggle.innerHTML = "⏸"

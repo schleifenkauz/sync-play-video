@@ -24,8 +24,8 @@ function connect() {
     listen_to_server(ws);
 
     // requestFullscreen();
-    enableSound();
     load_media();
+    enableSound();
 }
 
 function load_media() {
@@ -36,6 +36,7 @@ function load_media() {
 function connected() {
     stage_connecting.classList.add('hidden');
     stage_connected.classList.remove('hidden');
+    video_elem.pause();
     wait_msg.innerHTML = "Waiting for host to start the video...";
     ws.send(JSON.stringify({ type: "ready" }));
 }
@@ -52,7 +53,7 @@ function playAt(video_time, server_time) {
     }
 
     const drift = target_position - video_elem.currentTime;
-    console.log(`Target: ${target_position.toFixed(3)}s, Current: ${video_elem.currentTime.toFixed(3)}s, Drift: ${drift.toFixed(3)}s, Server clock offset: ${(round_trip_time / 2000).toFixed(3)}s`);
+    //console.log(`Target: ${target_position.toFixed(3)}s, Current: ${video_elem.currentTime.toFixed(3)}s, Drift: ${drift.toFixed(3)}s, Server clock offset: ${(round_trip_time / 2000).toFixed(3)}s`);
     if (Math.abs(drift) >= 1) {
         video_elem.currentTime = target_position;
         video_elem.playbackRate = 1.0;
@@ -111,7 +112,7 @@ function listen_to_server(ws) {
             round_trip_time = Date.now() - data.clientTime;
         }
         if (data.type === "play") {
-            console.log("START:", data.server_time, data.video_time);
+            //console.log("START:", data.server_time, data.video_time);
             playAt(data.video_time, data.server_time);
         }
         if (data.type === "pause") {
