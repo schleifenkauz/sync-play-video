@@ -14,7 +14,9 @@ function connect() {
     stage_connecting.classList.remove('hidden');
 
     const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-    ws = new WebSocket(`${protocol}//${location.host}`);
+    const adress = `${protocol}//${location.host}/ws`;
+    console.log(`Connecting to ${adress}...`);
+    ws = new WebSocket(adress);
     ws.onopen = () => {
         console.log("Connected!");
         ws.send(JSON.stringify({ type: "register-client", t0: Date.now() }));
@@ -34,11 +36,21 @@ function load_media() {
 function connected() {
     stage_connecting.classList.add('hidden');
     stage_connected.classList.remove('hidden');
+    wait_msg.innerHTML = "Waiting for host to start the video...";
     ws.send(JSON.stringify({ type: "ready" }));
 }
 
 function playAt(video_time, server_time) {
     const target_position = video_time + round_trip_time / 2000;
+
+    if (target_position >= video_elem.duration) {
+        video_elem.pause();
+        stage_connected.classList.add('hidden');
+        stage_finished.classList.remove('hidden');
+        exitFullscreen();
+        return;
+    }
+
     const drift = target_position - video_elem.currentTime;
     console.log(`Target: ${target_position.toFixed(3)}s, Current: ${video_elem.currentTime.toFixed(3)}s, Drift: ${drift.toFixed(3)}s, Server clock offset: ${(round_trip_time / 2000).toFixed(3)}s`);
     if (Math.abs(drift) >= 1) {
@@ -56,12 +68,6 @@ function playAt(video_time, server_time) {
     stage_connected.classList.remove('hidden');
     wait_msg.classList.add('hidden');
 
-    if (video_elem.currentTime >= video_elem.duration) {
-        video_elem.pause();
-        stage_connected.classList.add('hidden');
-        stage_finished.classList.remove('hidden');
-        exitFullscreen();
-    }
 }
 
 function requestFullscreen() {
