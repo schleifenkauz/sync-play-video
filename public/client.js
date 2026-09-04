@@ -84,6 +84,7 @@ function ready() {
 }
 
 function playAt(video_time, server_time) {
+    if (!is_ready) return;
     const target_position = video_time + round_trip_time / 2000;
 
     if (target_position >= video_elem.duration) {
