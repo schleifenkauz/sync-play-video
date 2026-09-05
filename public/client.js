@@ -114,13 +114,24 @@ function playAt(video_time, server_time) {
 
 }
 
-function requestFullscreen() {
-    if (video_elem.requestFullscreen) {
-        video_elem.requestFullscreen();
-    } else if (video_elem.webkitRequestFullscreen) {
-        video_elem.webkitRequestFullscreen();
-    } else if (video_elem.msRequestFullscreen) {
-        video_elem.msRequestFullscreen();
+function fullscreen() {
+    if (!video_elem) {
+        return;
+    }
+
+    const methods = [
+        'requestFullscreen',
+        'webkitRequestFullscreen',
+        'mozRequestFullScreen',
+        'msRequestFullscreen',
+        'webkitEnterFullscreen'
+    ];
+
+    for (const method of methods) {
+        if (typeof video_elem[method] === 'function') {
+            video_elem[method].call(video_elem);
+            return;
+        }
     }
 }
 
@@ -133,12 +144,18 @@ function exitFullscreen() {
         return;
     }
 
-    if (document.exitFullscreen) {
-        document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
+    const methods = [
+        'exitFullscreen',
+        'webkitExitFullscreen',
+        'mozCancelFullScreen',
+        'msExitFullscreen'
+    ];
+
+    for (const method of methods) {
+        if (typeof document[method] === 'function') {
+            document[method].call(document);
+            return;
+        }
     }
 }
 
