@@ -14,6 +14,9 @@ let ws;
 let round_trip_time = 0;
 let is_ready = false;
 let should_be_playing = false;
+let media_loaded = false;
+let reconnectTimer = null;
+let reconnectDelay = 1000; 
 
 function connect() {
     stage_preconnect.classList.add('hidden');
@@ -27,13 +30,45 @@ function connect() {
         console.log("Connected!");
         connecting_msg.innerHTML = "Connected! Downloading video...";
         ws.send(JSON.stringify({ type: "register-client", t0: Date.now() }));
+        load_media();
     };
-    listen_to_server(ws);
+    ws.onclose = () => {
+        console.log("Disconnected!");
+        wait_msg.innerHTML = "Disconnected from server. Reconnecting...";
+        scheduleReconnect();
+    };
+    ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        ws.close();
+    };
 
-    load_media();
+    listen_to_server(ws);
+}
+
+function scheduleReconnect() {
+  clearTimeout(reconnectTimer);
+
+  reconnectTimer = setTimeout(() => {
+    connect();
+
+    // Exponential backoff
+    reconnectDelay = Math.min(
+      reconnectDelay * 2,
+      30000
+    );
+  }, reconnectDelay);
+}
+
+function video_is_loaded() {
+    return !!video_elem && video_elem.readyState >= 2 && !!video_elem.src;
 }
 
 async function load_media() {
+    if (media_loaded || video_is_loaded()) {
+        ready();
+        return;
+    }
+
     try {
         const response = await fetch(`dl-media-file?download=${Date.now()}`);
         if (!response.ok || !response.body) {
@@ -76,6 +111,7 @@ async function load_media() {
 }
 
 function ready() {
+    media_loaded = true;
     stage_connecting.classList.add('hidden');
     stage_connected.classList.remove('hidden');
     wait_msg.innerHTML = "Waiting for host to start the video...";

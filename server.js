@@ -16,31 +16,31 @@ const upload = multer({
     storage: multer.memoryStorage()
 });
 
-let clients = [];
-let ready_clients = [];
-let admins = [];
+let clients = new Set();
+let ready_clients = new Set();
+let admins = new Set();
 
 let playing = false;
 let play_interval = null;
 let playback_start_time = 0;
 
-function send_play_message() {
+function send_play_message(send_to=clients) {
     const server_time = Date.now();
     const video_time = Math.max(0, (server_time - playback_start_time) / 1000);
     const msg = JSON.stringify({ type: "play", server_time, video_time });
-    clients.forEach(ws => ws.send(msg));
+    send_to.forEach(ws => ws.send(msg));
 }
 
 wss.on("connection", (ws) => {
     ws.authenticated = false;
 
     ws.on("close", () => {
-        clients = clients.filter(client => client !== ws);
-        admins = admins.filter(admin => admin !== ws);
-        ready_clients = ready_clients.filter(client => client !== ws);
+        clients.delete(ws);
+        admins.delete(ws);
+        ready_clients.delete(ws);
 
-        admins.forEach(adminWs => adminWs.send(JSON.stringify({ type: "num_clients", num_clients: clients.length })));
-        admins.forEach(adminWs => adminWs.send(JSON.stringify({ type: "num_ready", num_ready: ready_clients.length })));
+        admins.forEach(adminWs => adminWs.send(JSON.stringify({ type: "num_clients", num_clients: clients.size })));
+        admins.forEach(adminWs => adminWs.send(JSON.stringify({ type: "num_ready", num_ready: ready_clients.size })));
     });
 
     ws.on("message", (msg) => {
@@ -54,16 +54,6 @@ wss.on("connection", (ws) => {
                 authenticated: ws.authenticated
             }));
             return;
-        }
-
-        // Clock sync
-        if (data.type === "ping") {
-
-            ws.send(JSON.stringify({
-                type: "pong",
-                clientTime: data.t0,
-                serverTime: Date.now()
-            }));
         }
 
         if (data.type === "toggle") {
@@ -92,9 +82,9 @@ wss.on("connection", (ws) => {
             }
 
             console.log("Registered admin");
-            admins.push(ws);
-            ws.send(JSON.stringify({ type: "num_clients", num_clients: clients.length }));
-            ws.send(JSON.stringify({ type: "num_ready", num_ready: ready_clients.length }));
+            admins.add(ws);
+            ws.send(JSON.stringify({ type: "num_clients", num_clients: clients.size }));
+            ws.send(JSON.stringify({ type: "num_ready", num_ready: ready_clients.size }));
             if (playing) {
                 ws.send(JSON.stringify({ type: "start" }));
             }
@@ -102,21 +92,26 @@ wss.on("connection", (ws) => {
 
         if (data.type === "register-client") {
             console.log("Registered client");
-            clients.push(ws);
+            clients.add(ws);
             ws.send(JSON.stringify({
                 type: "pong",
                 clientTime: data.t0,
                 serverTime: Date.now()
             }));
-            admins.forEach(ws => ws.send(JSON.stringify({ type: "num_clients", num_clients: clients.length })));
+            admins.forEach(ws => ws.send(JSON.stringify({ type: "num_clients", num_clients: clients.size })));
+            if (playing) {
+                send_play_message(new Set([ws]));
+            } else {
+                ws.send(JSON.stringify({ type: "pause" }));
+            }
         }
 
         if (data.type === "ready") {
             console.log("Client ready");
-            if (!ready_clients.includes(ws)) {
-                ready_clients.push(ws);
+            if (!ready_clients.has(ws)) {
+                ready_clients.add(ws);
             }
-            const num_ready = ready_clients.length;
+            const num_ready = ready_clients.size;
             admins.forEach(ws => ws.send(JSON.stringify({ type: "num_ready", num_ready })));
         }
     });
