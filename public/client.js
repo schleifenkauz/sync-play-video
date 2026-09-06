@@ -13,6 +13,7 @@ const video_elem = document.getElementById('media');
 let ws;
 let round_trip_time = 0;
 let is_ready = false;
+let should_be_playing = false;
 
 function connect() {
     stage_preconnect.classList.add('hidden');
@@ -29,7 +30,6 @@ function connect() {
     };
     listen_to_server(ws);
 
-    // requestFullscreen();
     load_media();
 }
 
@@ -79,15 +79,18 @@ function ready() {
     stage_connecting.classList.add('hidden');
     stage_connected.classList.remove('hidden');
     wait_msg.innerHTML = "Waiting for host to start the video...";
+    enableSound();
     ws.send(JSON.stringify({ type: "ready" }));
     is_ready = true;
 }
 
 function playAt(video_time, server_time) {
     if (!is_ready) return;
+    should_be_playing = true;
     const target_position = video_time + round_trip_time / 2000;
 
     if (target_position >= video_elem.duration) {
+        should_be_playing = false;
         video_elem.pause();
         stage_connected.classList.add('hidden');
         stage_finished.classList.remove('hidden');
@@ -105,13 +108,17 @@ function playAt(video_time, server_time) {
     } else {
         video_elem.playbackRate = 1.0;
     }
-    enableSound();
     for (const elem of [stage_preconnect, stage_connecting, stage_finished]) {
         elem.classList.add('hidden');
     }
     stage_connected.classList.remove('hidden');
     wait_msg.classList.add('hidden');
 
+    if (video_elem.paused) {
+        video_elem.play().catch((error) => {
+            console.error("Error while trying to play the video:", error);
+        });
+    }
 }
 
 function fullscreen() {
@@ -130,6 +137,9 @@ function fullscreen() {
     for (const method of methods) {
         if (typeof video_elem[method] === 'function') {
             video_elem[method].call(video_elem);
+            if (!should_be_playing) {
+                video_elem.pause();
+            }
             return;
         }
     }
@@ -148,7 +158,8 @@ function exitFullscreen() {
         'exitFullscreen',
         'webkitExitFullscreen',
         'mozCancelFullScreen',
-        'msExitFullscreen'
+        'msExitFullscreen',
+        'webkitEnterFullscreen'
     ];
 
     for (const method of methods) {
@@ -162,7 +173,6 @@ function exitFullscreen() {
 function enableSound() {
     video_elem.muted = false;
     video_elem.volume = 1;
-    video_elem.play().catch(error => console.error("Unable to start video:", error));
 }
 
 function listen_to_server(ws) {
@@ -172,10 +182,12 @@ function listen_to_server(ws) {
             round_trip_time = Date.now() - data.clientTime;
         }
         if (data.type === "play") {
+            should_be_playing = true;
             //console.log("START:", data.server_time, data.video_time);
             playAt(data.video_time, data.server_time);
         }
         if (data.type === "pause") {
+            should_be_playing = false;
             //console.log("PAUSE!")
             if (video_elem) {
                 video_elem.pause();
