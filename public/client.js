@@ -9,6 +9,9 @@ const download_progress_bar = document.getElementById('download_progress_bar');
 const download_progress_text = document.getElementById('download_progress_text');
 
 const video_elem = document.getElementById('media');
+const video_container = document.getElementById('video-container');
+const btn_fullscreen = document.getElementById('btn_fullscreen');
+const exit_fullscreen_btn = document.getElementById('btn_exit_fullscreen');
 
 let ws;
 let round_trip_time = 0;
@@ -65,7 +68,7 @@ async function load_media() {
     }
 
     try {
-        const response = await fetch(`dl-media-file?download=${Date.now()}`);
+        const response = await fetch(`dl-media-file?download=${Date.now()}`); 
         if (!response.ok || !response.body) {
             throw new Error(`Unable to download video: ${response.status}`);
         }
@@ -159,38 +162,38 @@ function fullscreen() {
 
     const methods = [
         'requestFullscreen',
-        'webkitRequestFullscreen',
         'mozRequestFullScreen',
-        'msRequestFullscreen',
-        'webkitEnterFullscreen'
+        'msRequestFullscreen'
     ];
 
     for (const method of methods) {
-        if (typeof video_elem[method] === 'function') {
-            video_elem[method].call(video_elem);
+        if (typeof video_container[method] === 'function') {
+            video_container[method].call(video_container);
             if (!should_be_playing) {
                 video_elem.pause();
             }
             return;
         }
     }
+
+    video_container.classList.add('fullscreen');
 }
 
+exit_fullscreen_btn.addEventListener('click', exitFullscreen);
+
 function exitFullscreen() {
-    const fullscreen_element = document.fullscreenElement ||
-        document.webkitFullscreenElement ||
-        document.msFullscreenElement;
+    const fullscreen_element = document.fullscreenElement || document.msFullscreenElement;
+    console.log("Exiting fullscreen. Fullscreen element:", fullscreen_element);
 
     if (!fullscreen_element) {
+        video_container.classList.remove('fullscreen');
         return;
     }
 
     const methods = [
         'exitFullscreen',
-        'webkitExitFullscreen',
         'mozCancelFullScreen',
-        'msExitFullscreen',
-        'webkitEnterFullscreen'
+        'msExitFullscreen'
     ];
 
     for (const method of methods) {
@@ -214,14 +217,17 @@ function listen_to_server(ws) {
         }
         if (data.type === "play") {
             should_be_playing = true;
+            btn_fullscreen.classList.remove('hidden');
             //console.log("START:", data.server_time, data.video_time);
             playAt(data.video_time, data.server_time);
         }
         if (data.type === "pause") {
             should_be_playing = false;
+            btn_fullscreen.classList.add('hidden');
             //console.log("PAUSE!")
             if (video_elem) {
                 video_elem.pause();
+                exitFullscreen();
                 wait_msg.classList.remove('hidden');
             };
         }

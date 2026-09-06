@@ -32,10 +32,14 @@
                 Downloading video...
             </text>
 
-            <video id="media" preload="auto" playsinline muted disablepictureinpicture>
-            </video>
-
-            <button id="btn_fullscreen" onclick="fullscreen()">
+            <div id="video-container">
+                <video id="media" preload="auto" playsinline muted disablepictureinpicture>
+                </video>
+                <button id="btn_exit_fullscreen" class="exit-fullscreen" aria-label="Exit fullscreen" title="Exit fullscreen">
+                    ✕
+                </button>
+            </div>
+            <button id="btn_fullscreen" onclick="fullscreen()" class="hidden">
                 Enter Fullscreen
             </button>
 
