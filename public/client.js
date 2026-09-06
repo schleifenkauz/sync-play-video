@@ -16,9 +16,31 @@ let is_ready = false;
 let should_be_playing = false;
 let media_loaded = false;
 let reconnectTimer = null;
-let reconnectDelay = 1000; 
+let reconnectDelay = 1000;
+
+function can_reconnect() {
+    const visible = document.visibilityState !== 'hidden';
+    const online = typeof navigator.onLine === 'boolean' ? navigator.onLine : true;
+    return visible && online;
+}
+
+function handle_page_state_change() {
+    if (!can_reconnect()) {
+        clearTimeout(reconnectTimer);
+        return;
+    }
+
+    if (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+        scheduleReconnect();
+    }
+}
 
 function connect() {
+    if (!can_reconnect()) {
+        console.log('Skipping connection attempt while page is hidden or offline.');
+        return;
+    }
+
     stage_preconnect.classList.add('hidden');
     stage_connecting.classList.remove('hidden');
 
@@ -35,7 +57,9 @@ function connect() {
     ws.onclose = () => {
         console.log("Disconnected!");
         wait_msg.innerHTML = "Disconnected from server. Reconnecting...";
-        scheduleReconnect();
+        if (can_reconnect()) {
+            scheduleReconnect();
+        }
     };
     ws.onerror = (error) => {
         console.error("WebSocket error:", error);
@@ -47,8 +71,11 @@ function connect() {
 
 function scheduleReconnect() {
   clearTimeout(reconnectTimer);
-
   reconnectTimer = setTimeout(() => {
+    if (!can_reconnect()) {
+      return;
+    }
+
     connect();
 
     // Exponential backoff
@@ -58,6 +85,10 @@ function scheduleReconnect() {
     );
   }, reconnectDelay);
 }
+
+document.addEventListener('visibilitychange', handle_page_state_change);
+window.addEventListener('online', handle_page_state_change);
+window.addEventListener('offline', handle_page_state_change);
 
 function video_is_loaded() {
     return !!video_elem && video_elem.readyState >= 2 && !!video_elem.src;
