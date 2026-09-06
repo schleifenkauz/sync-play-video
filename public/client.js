@@ -155,6 +155,8 @@ function playAt(video_time, server_time) {
     }
 }
 
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
 function fullscreen() {
     if (!video_elem) {
         return;
@@ -166,6 +168,11 @@ function fullscreen() {
         'msRequestFullscreen'
     ];
 
+    if (isIOS) {
+        video_container.classList.add('fullscreen');
+        return;
+    }
+
     for (const method of methods) {
         if (typeof video_container[method] === 'function') {
             video_container[method].call(video_container);
@@ -175,8 +182,6 @@ function fullscreen() {
             return;
         }
     }
-
-    video_container.classList.add('fullscreen');
 }
 
 exit_fullscreen_btn.addEventListener('click', exitFullscreen);
